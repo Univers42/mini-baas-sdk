@@ -14,11 +14,13 @@ interface HttpClientOptions {
   retry?: number | RetryOptions;
 }
 
-interface RequestOptions {
+export interface RequestOptions {
   method?: string;
   body?: unknown;
   headers?: HeadersInit;
   auth?: boolean;
+  apiKey?: string;
+  bearerToken?: string;
 }
 
 export class HttpClient {
@@ -111,10 +113,11 @@ export class HttpClient {
 
   private buildHeaders(init: RequestOptions): Headers {
     const headers = new Headers(init.headers);
-    headers.set('apikey', this.anonKey);
+    const apiKey = init.apiKey ?? this.anonKey;
+    headers.set('apikey', apiKey);
 
     if (init.auth !== false) {
-      headers.set('Authorization', `Bearer ${this.session?.accessToken ?? this.anonKey}`);
+      headers.set('Authorization', `Bearer ${init.bearerToken ?? this.session?.accessToken ?? apiKey}`);
     }
 
     if (init.body !== undefined) headers.set('Content-Type', 'application/json');

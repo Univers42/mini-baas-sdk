@@ -10,11 +10,13 @@ interface HttpClientOptions {
     timeoutMs?: number;
     retry?: number | RetryOptions;
 }
-interface RequestOptions {
+export interface RequestOptions {
     method?: string;
     body?: unknown;
     headers?: HeadersInit;
     auth?: boolean;
+    apiKey?: string;
+    bearerToken?: string;
 }
 export declare class HttpClient {
     private readonly baseUrl;

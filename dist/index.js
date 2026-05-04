@@ -1,6 +1,7 @@
 import { AnalyticsClient } from './domains/analytics.js';
 import { AuthClient } from './domains/auth.js';
 import { QueryClient } from './domains/query.js';
+import { RestClient } from './domains/rest.js';
 import { StorageClient } from './domains/storage.js';
 import { HttpClient } from './core/http.js';
 import { createBrowserStorageAdapter, createMemoryStorageAdapter, } from './core/storage.js';
@@ -8,6 +9,7 @@ export { MiniBaasError, MiniBaasTimeoutError } from './core/errors.js';
 export class MiniBaasClient {
     auth;
     query;
+    rest;
     storage;
     analytics;
     http;
@@ -28,13 +30,20 @@ export class MiniBaasClient {
             timeoutMs: options.timeoutMs,
             retry: options.retry,
         });
-        this.auth = new AuthClient(this.http);
+        this.auth = new AuthClient(this.http, options.serviceRoleKey);
         this.query = new QueryClient(this.http, options.defaultDatabaseId ?? 'default');
+        this.rest = new RestClient(this.http);
         this.storage = new StorageClient(this.http);
         this.analytics = new AnalyticsClient(this.http);
     }
-    from(resource, databaseId) {
+    from(resource) {
+        return this.rest.from(resource);
+    }
+    fromQuery(resource, databaseId) {
         return this.query.from(resource, databaseId);
+    }
+    rpc(name, payload, options) {
+        return this.rest.rpc(name, payload, options);
     }
     setSession(session) {
         this.http.setSession(session);

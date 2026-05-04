@@ -1,6 +1,7 @@
 import { AnalyticsClient } from './domains/analytics.js';
 import { AuthClient } from './domains/auth.js';
 import { QueryClient, ResourceQueryBuilder } from './domains/query.js';
+import { RestClient, RestResourceBuilder } from './domains/rest.js';
 import { StorageClient } from './domains/storage.js';
 import { HttpClient } from './core/http.js';
 import {
@@ -9,6 +10,7 @@ import {
   type SessionStorageAdapter,
 } from './core/storage.js';
 import type { ClientSession, SessionInput } from './core/session.js';
+import type { RestRequestOptions } from './types.js';
 
 export type {
   AuthSession,
@@ -23,7 +25,16 @@ export type {
   PresignInput,
   QueryRunInput,
   QueryRunResponse,
+  RecoverInput,
+  RestFilterOperator,
+  RestMutationOptions,
+  RestQueryOptions,
+  RestRequestOptions,
+  RestResourceBuilder as RestResourceBuilderApi,
   SignInWithPasswordInput,
+  SignUpInput,
+  UpdateUserInput,
+  VerifyInput,
 } from './types.js';
 
 export interface RetryOptions {
@@ -38,6 +49,7 @@ export interface MiniBaasClientOptions {
   fetch?: typeof fetch;
   accessToken?: string;
   refreshToken?: string;
+  serviceRoleKey?: string;
   defaultDatabaseId?: string;
   persistSession?: boolean;
   storage?: SessionStorageAdapter;
@@ -49,6 +61,7 @@ export interface MiniBaasClientOptions {
 export class MiniBaasClient {
   readonly auth: AuthClient;
   readonly query: QueryClient;
+  readonly rest: RestClient;
   readonly storage: StorageClient;
   readonly analytics: AnalyticsClient;
 
@@ -73,14 +86,27 @@ export class MiniBaasClient {
       retry: options.retry,
     });
 
-    this.auth = new AuthClient(this.http);
+    this.auth = new AuthClient(this.http, options.serviceRoleKey);
     this.query = new QueryClient(this.http, options.defaultDatabaseId ?? 'default');
+    this.rest = new RestClient(this.http);
     this.storage = new StorageClient(this.http);
     this.analytics = new AnalyticsClient(this.http);
   }
 
-  from<Row = Record<string, unknown>>(resource: string, databaseId?: string): ResourceQueryBuilder<Row> {
+  from<Row = Record<string, unknown>>(resource: string): RestResourceBuilder<Row> {
+    return this.rest.from<Row>(resource);
+  }
+
+  fromQuery<Row = Record<string, unknown>>(resource: string, databaseId?: string): ResourceQueryBuilder<Row> {
     return this.query.from<Row>(resource, databaseId);
+  }
+
+  rpc<TResult = unknown, TPayload = Record<string, unknown>>(
+    name: string,
+    payload?: TPayload,
+    options?: RestRequestOptions,
+  ): Promise<TResult> {
+    return this.rest.rpc<TResult, TPayload>(name, payload, options);
   }
 
   setSession(session: SessionInput): void {

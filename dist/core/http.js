@@ -78,9 +78,10 @@ export class HttpClient {
     }
     buildHeaders(init) {
         const headers = new Headers(init.headers);
-        headers.set('apikey', this.anonKey);
+        const apiKey = init.apiKey ?? this.anonKey;
+        headers.set('apikey', apiKey);
         if (init.auth !== false) {
-            headers.set('Authorization', `Bearer ${this.session?.accessToken ?? this.anonKey}`);
+            headers.set('Authorization', `Bearer ${init.bearerToken ?? this.session?.accessToken ?? apiKey}`);
         }
         if (init.body !== undefined)
             headers.set('Content-Type', 'application/json');
