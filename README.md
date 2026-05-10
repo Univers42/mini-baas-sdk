@@ -4,11 +4,15 @@ Product SDK for consuming mini-BaaS through the public gateway.
 
 The SDK is intentionally designed as the public product API. Application code calls domain methods such as `auth.signIn()`, `from("users").select()`, `storage.presign()`, and `analytics.track()`; gateway routes and service endpoint details stay private inside the SDK.
 
-## Install
+## Use In This Workspace
+
+This workspace uses the SDK through Docker-managed dependency volumes. Do not install it on the host for local development. Start the root stack instead:
 
 ```sh
-npm install @mini-baas/js
+docker compose up -d --build
 ```
+
+External applications can consume the package from the registry using their normal package manager.
 
 ## Create a client
 
